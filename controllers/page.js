@@ -9,7 +9,7 @@ exports.renderJoin = (req, res) => {
 exports.renderMain = (req, res, next) => {
     const twits = [];
     res.render('main', {
-        title: 'NodeBird',
+        title: 'SNS',
         twits,
     });
 };
