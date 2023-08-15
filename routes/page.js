@@ -15,10 +15,14 @@ router.use((req, res, next) => {
 router.get('/profile', isLoggedIn, renderProfile);
 router.get('/join', isNotLoggedIn, renderJoin);
 
-router.get('/profile', renderProfile);
+// router.get('/profile', renderProfile);
 
 router.get('/join', renderJoin);
 router.get('/', renderMain);
 router.get('/hashtag', renderHashtag);
+
+router.get('/home', (req, res) => {
+    res.render('index');
+});
 
 module.exports = router;

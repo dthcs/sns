@@ -1,0 +1,28 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIF Chatting</title>
+</head>
+<body> -->
+{% extends 'layout.html' %}
+
+{% block content %}
+    <div>Press F12 then check tabs: console, network</div>
+{% endblock %}
+
+{% block script %}
+    <script>
+        const webSocket = new WebSocket("ws://localhost:8005");
+        webSocket.onopen = function(){
+            console.log('Connect Server and WebSocket successfully!');
+        };
+        webSocket.onmessage = function(event){
+            console.log(event.data);
+            webSocket.send('Send message from client to server');
+        };
+    </script>
+{% endblock %}
+<!-- </body>
+</html> -->
