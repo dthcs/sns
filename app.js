@@ -8,6 +8,8 @@ const dotenv = require('dotenv');
 const passport = require('passport');
 
 dotenv.config();
+const webSocket = require('./socket');
+// const indexRouter = require('./routes/index');
 const pageRouter = require('./routes/page');
 const authRouter = require('./routes/auth');
 const postRouter = require('./routes/post');
@@ -17,7 +19,7 @@ const passportConfig = require('./passport');
 
 const app = express();
 passportConfig();
-app.set('port', process.env.PORT || 8000);
+app.set('port', process.env.PORT || 8005);
 app.set('view engine', 'html');
 nunjucks.configure('views', {
     express: app,
@@ -50,6 +52,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+// app.use('/home', indexRouter);
 app.use('/', pageRouter);
 app.use('/auth', authRouter);
 app.use('/post', postRouter);
