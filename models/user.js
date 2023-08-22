@@ -16,6 +16,11 @@ class User extends Sequelize.Model{
                 type: Sequelize.STRING(100),
                 allowNull: true,
             },
+            money: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+                defaultValue: 0,
+            },
             provider: {
                 type: Sequelize.ENUM('local', 'kakao'),
                 allowNull: false,
@@ -38,6 +43,7 @@ class User extends Sequelize.Model{
     }
 
     static associate(db){
+        db.User.hasMany(db.Auction);
         db.User.hasMany(db.Post);
         db.User.belongsToMany(db.User, {
             foreignKey: 'followingId',
