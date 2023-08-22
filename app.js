@@ -8,6 +8,7 @@ const dotenv = require('dotenv');
 const passport = require('passport');
 
 dotenv.config();
+const sse = require('./sse');
 const webSocket = require('./socket');
 // const indexRouter = require('./routes/index');
 const pageRouter = require('./routes/page');
@@ -19,7 +20,7 @@ const passportConfig = require('./passport');
 
 const app = express();
 passportConfig();
-app.set('port', process.env.PORT || 8005);
+app.set('port', process.env.PORT || 8010);
 app.set('view engine', 'html');
 nunjucks.configure('views', {
     express: app,
@@ -34,21 +35,33 @@ sequelize.sync({ force: false })
         console.error(err);
     });
 
+const sessionMiddleware = session({
+    resave: false,
+    saveUninitialized: false,
+    secret: process.env.COOKIE_SECRET,
+    cookie:{
+        httpOnly: true,
+        secure: false,
+    },
+});
+
 app.use(morgan('dev'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/img', express.static(path.join(__dirname, 'uploads')));
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 app.use(cookieParser(process.env.COOKIE_SECRET));
-app.use(session({
-    resave: false,
-    saveUninitialized: false,
-    secret: process.env.COOKIE_SECRET,
-    cookie: {
-        httpOnly: true,
-        secure: false,
-    },
-}));
+// app.use(session({
+//     resave: false,
+//     saveUninitialized: false,
+//     secret: process.env.COOKIE_SECRET,
+//     cookie: {
+//         httpOnly: true,
+//         secure: false,
+//     },
+// }));
+
+app.use(sessionMiddleware);
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -71,7 +84,10 @@ app.use((err, req, res, next) => {
     res.render('error');
 });
 
-app.listen(app.get('port'), () => {
+const server = app.listen(app.get('port'), () => {
     console.log(app.get('port'), 'is waiting');
 });
+
+webSocket(server, app);
+sse(server);
 

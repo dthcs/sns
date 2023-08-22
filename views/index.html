@@ -13,7 +13,19 @@
 {% endblock %}
 
 {% block script %}
+
+    <script src ="/socket.io/socket.io.js"></script>
     <script>
+        const socket = io.connect("http://localhost:8005", {
+            path: '/socket.io',
+            transports: ['websocket'],
+        });
+        socket.on('news', function(data){
+            console.log(data);
+            socket.emit('reply', 'Hello Node.JS');
+        });
+    </script>
+    <!-- <script>
         const webSocket = new WebSocket("ws://localhost:8005");
         webSocket.onopen = function(){
             console.log('Connect Server and WebSocket successfully!');
@@ -22,7 +34,7 @@
             console.log(event.data);
             webSocket.send('Send message from client to server');
         };
-    </script>
+    </script> -->
 {% endblock %}
 <!-- </body>
 </html> -->
