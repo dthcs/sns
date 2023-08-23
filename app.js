@@ -6,8 +6,19 @@ const session = require('express-session');
 const nunjucks = require('nunjucks');
 const dotenv = require('dotenv');
 const passport = require('passport');
+const helmet = require('helmet');
+const hpp = require('hpp');
+const redis = require('redis');
+const RedisStrore = require('connect-redis').default;
 
 dotenv.config();
+const redisClient = redis.createClient({
+    url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
+    password: process.env.REDIS_PASSWORD,
+    legacyMode: true,
+  });
+redisClient.connect().catch(console.error);
+
 const sse = require('./sse');
 const webSocket = require('./socket');
 const checkAuction = require('./checkAuction');
@@ -18,10 +29,11 @@ const postRouter = require('./routes/post');
 const userRouter = require('./routes/user');
 const { sequelize } = require('./models');
 const passportConfig = require('./passport');
+const logger = require('./logger');
 
 const app = express();
 passportConfig();
-app.set('port', process.env.PORT || 8010);
+app.set('port', process.env.PORT || 8001);
 app.set('view engine', 'html');
 nunjucks.configure('views', {
     express: app,
@@ -35,6 +47,20 @@ sequelize.sync({ force: false })
     .catch((err) => {
         console.error(err);
     });
+
+if(process.env.NODE_ENV === 'production'){
+    app.use(morgan('combined'));
+    app.use(
+        helmet({
+            contentSecurityPolicy: false,
+            crossOriginEmbedderPolicy: false,
+            crossOriginResourcePolicy: false,
+        }),
+    );
+    app.use(hpp());
+}else{
+    app.use(morgan('dev'));
+}
 
 const sessionMiddleware = session({
     resave: false,
@@ -52,6 +78,24 @@ app.use('/img', express.static(path.join(__dirname, 'uploads')));
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 app.use(cookieParser(process.env.COOKIE_SECRET));
+
+const sessionOption = {
+    resave: false,
+    saveUninitialized: false,
+    secret: process.env.COOKIE_SECRET,
+    cookie: {
+        httpOnly: true,
+        secure: false,
+    },
+    store: new RedisStore({ client: redisClient }),
+};
+if(process.env.NODE_ENV === 'production'){
+    sessionOption.proxy = true;
+    // sessionOption.cookie.secure = true;
+}
+app.use(session(sessionOption));
+app.use(passport.initialize());
+
 // app.use(session({
 //     resave: false,
 //     saveUninitialized: false,
@@ -75,6 +119,8 @@ app.use('/user', userRouter);
 app.use((req, res, next) => {
     const error = new Error(`${req.method} ${req.url} have no router`);
     error.status = 404;
+    logger.info('hello');
+    logger.error(error.message);
     next(error);
 });
 
@@ -85,11 +131,13 @@ app.use((err, req, res, next) => {
     res.render('error');
 });
 
-const server = app.listen(app.get('port'), () => {
-    console.log(app.get('port'), 'is waiting');
-});
+// const server = app.listen(app.get('port'), () => {
+//     console.log(app.get('port'), 'is waiting');
+// });
 
-webSocket(server, app);
-sse(server);
+// webSocket(server, app);
+// sse(server);
 checkAuction();
+
+module.exports = app;
 
