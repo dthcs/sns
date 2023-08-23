@@ -21,8 +21,12 @@
               <div>Follower</div>
               <div class="count follower-count">{{followerCount}}</div>
             </div>
+            <div class="user-money">User Money: {{user.money}} vnd</div>
           <input id="my-id" type="hidden" value="{{user.id}}">
+
           <a id="my-profile" href="/profile" class="btn">My Profile</a>
+          <a href="/good" id="register" class="btn">Good Register</a>
+          <a href="/list" id="list" class="btn">Bid List</a>
           <a id="logout" href="/auth/logout" class="btn">Logout</a>
         {% else %}
           <form id="login-form" action="/auth/login" method="post">
