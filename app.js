@@ -10,6 +10,7 @@ const passport = require('passport');
 dotenv.config();
 const sse = require('./sse');
 const webSocket = require('./socket');
+const checkAuction = require('./checkAuction');
 // const indexRouter = require('./routes/index');
 const pageRouter = require('./routes/page');
 const authRouter = require('./routes/auth');
@@ -90,4 +91,5 @@ const server = app.listen(app.get('port'), () => {
 
 webSocket(server, app);
 sse(server);
+checkAuction();
 

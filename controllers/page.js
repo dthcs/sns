@@ -1,4 +1,5 @@
-const { User, Post, Hashtag, Good, Auction } = require('../models');
+const { User, Post, Hashtag, Good, Auction, sequelize } = require('../models');
+const schedule = require('node-schedule');
 const { Op } = require('sequelize');
 
 exports.renderProfile = (req, res) => {
@@ -73,11 +74,31 @@ exports.renderGood = (req, res) => {
 exports.createGood = async(req, res, next) => {
     try{
         const {name, price} = req.body;
-        await Good.create({
+        const good = await Good.create({
             OwnerId: req.user.id,
             name,
             img: req.file.filename,
             price,
+        });
+        const end = new Date();
+        end.setDate(end.getDate()+1);
+        const job = schedule.scheduleJob(end, async() => {
+            const success = await Auction.findOne({
+                where: { GoodId: good.id },
+                order: [['bid', 'DESC']],
+            });
+            await good.setSold(success.UserId);
+            await User.update({
+                money: sequelize.literal(`money - ${success.bid}`),
+            }, {
+                where: { id: success.UserId },
+            });
+        });
+        job.on('error', (err) => {
+            console.error('Scheduling error', err);
+        });
+        job.on('success', () => {
+            console.log('Scheduling success');
         });
         res.redirect('/auction');
     }catch (error){
@@ -149,5 +170,19 @@ exports.bid = async(req, res, next) => {
     }catch(error){
         console.error(error);
         return next(error);
+    }
+};
+
+exports.renderList = async(req, res, next) => {
+    try{
+        const goods = await Good.findAll({
+            where: { SoldId: req.user.id },
+            include: { model: Auction },
+            order: [[{ model: Auction }, 'bid', 'DESC']],
+        });
+        res.render('list', {title: 'Bid List - NodeAuction', goods});
+    } catch(error){
+        console.error(error);
+        next(error);
     }
 };

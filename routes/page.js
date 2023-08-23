@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 
 const { isLoggedIn, isNotLoggedIn } = require('../middlewares');
-const { renderProfile, renderJoin, renderMain, renderHashtag, renderGood, createGood, renderAuction, renderBid, bid } = require('../controllers/page');
+const { renderProfile, renderJoin, renderMain, renderHashtag, renderGood, createGood, renderAuction, renderBid, bid, renderList, } = require('../controllers/page');
 
 const router = express.Router();
 
@@ -54,4 +54,7 @@ router.post('/good', isLoggedIn, upload.single('img'), createGood);
 
 router.get('/good/:id', isLoggedIn, renderBid);
 router.post('/good/:id/bid', isLoggedIn, bid);
+
+router.get('/list', isLoggedIn, renderList);
+
 module.exports = router;
